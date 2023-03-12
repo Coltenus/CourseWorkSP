@@ -13,11 +13,12 @@ namespace CourseWorkSP
         instruction,
         variable,
         label,
-        error
+        error,
+        comment
     }
     public class RowsData
     {
-        public List<StringRow> _rows { get; }
+        public List<StringRow> _rows { get; set; }
         public bool isExist { get; }
 
         public RowsData()
@@ -30,8 +31,6 @@ namespace CourseWorkSP
             isExist = true;
             foreach (var line in rawData)
             {
-                // if(line == "")
-                //     continue;
                 var row = new StringRow(line, 1);
                 _rows.Add(row);
             }
@@ -83,12 +82,6 @@ namespace CourseWorkSP
 
         public void ProcessData()
         {
-            StringRow._number = 0;
-            foreach (var row in _rows)
-            {
-                row.ProcessRow();
-            }
-
             for (int i = 0; i < _rows.Count;)
             {
                 if (_rows[i].GetList().Count == 0)

@@ -22,11 +22,10 @@ namespace CourseWorkSP
             }
 
             rows.ProcessData();
-            // rows.WriteConsole();
-            var list = rows.ToStringList();
 
-            Parser parser = new Parser(list);
+            Parser parser = new Parser(ref rows);
             parser.WriteRowTypes();
+            Console.WriteLine(parser.Is32());
         }
 
         private static int FindParameterPosition(string param, string[] args)

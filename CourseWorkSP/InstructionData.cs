@@ -37,11 +37,13 @@
         public bool _isSOpExist { get; }
         public bool _isFOpRequired { get; }
         public bool _isSOpRequired { get; }
+        public int _size { get; }
 
-        public InstructionData(InstructionType instruction = InstructionType.none,
+        public InstructionData(InstructionType instruction = InstructionType.none, int size = 0,
             OperandType op1 = OperandType.none, OperandType op2 = OperandType.none,
             bool isFOpRequired = true, bool isSOpRequired = true)
         {
+            _size = size;
             _instruction = instruction;
             _operand1 = op1;
             _operand2 = op2;
