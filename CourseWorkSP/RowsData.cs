@@ -5,90 +5,33 @@ using System.Text;
 
 namespace CourseWorkSP
 {
-    public enum RowType
-    {
-        none = 0,
-        empty,
-        directive,
-        instruction,
-        variable,
-        label,
-        error,
-        comment
-    }
     public class RowsData
     {
-        public List<StringRow> _rows { get; set; }
+        public List<string> _rows { get; set; }
+        public List<List<string>> _words { get; set; }
         public bool isExist { get; }
 
         public RowsData()
         {
             isExist = false;
         }
-        public RowsData(List<string> rawData)
+        public RowsData(List<string> rows)
         {
-            _rows = new List<StringRow>();
+            _rows = rows;
+            _words = new List<List<string>>();
             isExist = true;
-            foreach (var line in rawData)
-            {
-                var row = new StringRow(line, 1);
-                _rows.Add(row);
-            }
-        }
-
-        public List<string> ToStringList()
-        {
-            List<string> result = new List<string>();
-
+            int i = 0;
             foreach (var row in _rows)
             {
-                var words = row.GetList();
-                string str;
-                if (words.Count > 0)
-                    str = words[0];
-                else str = "";
-                for (int i = 1; i < words.Count; i++)
+                if(row.Trim(new []{' ', '\t'}).StartsWith(";") || row.Trim(new []{' ', '\t'}) != "")
+                    break;
+                _words.Add(new List<string>());
+                foreach (var word in row.Split(' '))
                 {
-                    str += " " + words[i];
+                    _words[i].Add(word);
                 }
-                result.Add(str);
-            }
 
-            return result;
-        }
-
-        public void WriteFile(string file)
-        {
-            if (isExist)
-            {
-                var output = File.Open(file, FileMode.Create);
-                foreach (var line in ToStringList())
-                {
-                    output.Write(Encoding.Default.GetBytes(line + "\n"), 0, line.Length+1);
-                }
-            }
-        }
-
-        public void WriteConsole()
-        {
-            if (isExist)
-            {
-                foreach (var line in ToStringList())
-                {
-                    Console.WriteLine(line);
-                }
-            }
-        }
-
-        public void ProcessData()
-        {
-            for (int i = 0; i < _rows.Count;)
-            {
-                if (_rows[i].GetList().Count == 0)
-                {
-                    _rows.RemoveAt(i);
-                }
-                else i++;
+                i++;
             }
         }
     }

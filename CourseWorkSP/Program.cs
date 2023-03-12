@@ -20,12 +20,8 @@ namespace CourseWorkSP
                 
                 rows = new RowsData(lines);
             }
-
-            rows.ProcessData();
-
-            Parser parser = new Parser(ref rows);
-            parser.WriteRowTypes();
-            Console.WriteLine(parser.Is32());
+            
+            Console.WriteLine();
         }
 
         private static int FindParameterPosition(string param, string[] args)

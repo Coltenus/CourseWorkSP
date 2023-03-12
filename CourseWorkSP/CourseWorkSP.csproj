@@ -39,13 +39,9 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="InstructionData.cs" />
-        <Compile Include="Parser.cs" />
         <Compile Include="Program.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="RowsData.cs" />
-        <Compile Include="StringRow.cs" />
-        <Compile Include="Variable.cs" />
     </ItemGroup>
     <ItemGroup>
       <Content Include="test1.asm" />
