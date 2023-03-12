@@ -23,12 +23,13 @@ namespace CourseWorkSP
             int i = 0;
             foreach (var row in _rows)
             {
-                if(row.Trim(new []{' ', '\t'}).StartsWith(";") || row.Trim(new []{' ', '\t'}) != "")
-                    break;
+                if(row.Trim(new []{' ', '\t'}).StartsWith(";") || row.Trim(new []{' ', '\t'}) == "")
+                    continue;
                 _words.Add(new List<string>());
                 foreach (var word in row.Split(' '))
                 {
-                    _words[i].Add(word);
+                    if(word != "")
+                        _words[i].Add(word.Trim('\t'));
                 }
 
                 i++;

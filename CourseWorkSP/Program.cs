@@ -11,7 +11,7 @@ namespace CourseWorkSP
     {
         public static void Main(string[] args)
         {
-            RowsData rows = new RowsData();
+            RowsData rows;
             int in_param = FindParameterPosition("-i", args);
 
             if(CheckParametersValidity(in_param, args)
