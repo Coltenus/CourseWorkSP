@@ -34,7 +34,7 @@ namespace CourseWorkSP
             "tiny", "small"
         };
         public List<string> _rows { get; set; }
-        public List<List<string>> _words { get; set; }
+        public List<Tuple<int, List<string>>> _words { get; set; }
         public bool isExist { get; }
 
         public RowsData()
@@ -44,14 +44,18 @@ namespace CourseWorkSP
         public RowsData(List<string> rows)
         {
             _rows = rows;
-            _words = new List<List<string>>();
+            _words = new List<Tuple<int, List<string>>>();
             isExist = true;
             int i = 0;
+            int rowOffset = 0;
             foreach (var row in _rows)
             {
-                if(row.Trim(new []{' ', '\t'}).StartsWith(";") || row.Trim(new []{' ', '\t'}) == "")
+                if (row.Trim(new[] { ' ', '\t' }).StartsWith(";") || row.Trim(new[] { ' ', '\t' }) == "")
+                {
+                    rowOffset++;
                     continue;
-                _words.Add(new List<string>());
+                }
+                _words.Add(new Tuple<int, List<string>>(rowOffset+i+1, new List<string>()));
                 foreach (var word in row.Split(' '))
                 {
                     if (word != "")
@@ -64,13 +68,13 @@ namespace CourseWorkSP
                             || newWord[j] == '.' || newWord[j] >= 48 && newWord[j] <= 57 ))
                             {
                                 if(j - offset != 0)
-                                    _words[i].Add(newWord.Substring(offset, j - offset));
-                                _words[i].Add(newWord.Substring(j, 1));
+                                    _words[i].Item2.Add(newWord.Substring(offset, j - offset));
+                                _words[i].Item2.Add(newWord.Substring(j, 1));
                                 offset = j + 1;
                             }
                         }
                         if(offset != newWord.Length)
-                            _words[i].Add(newWord.Substring(offset, newWord.Length - offset));
+                            _words[i].Item2.Add(newWord.Substring(offset, newWord.Length - offset));
                     }
                 }
 
@@ -78,15 +82,18 @@ namespace CourseWorkSP
             }
         }
 
-        public string CreateSymbolTable()
+        public List<string> CreateSymbolTable()
         {
-            string result = "Таблиця лексем\n";
+            List<string> result = new List<string>()
+            {
+                "Таблиця лексем\n"
+            };
             foreach (var wordsLine in _words)
             {
                 int i = 0;
-                result += "№\t\tЛексема\t\tДовжина лексеми у символах\t\tТип лексеми\n";
+                result.Add("№\t\tЛексема\t\tДовжина лексеми у символах\t\tТип лексеми\n");
 
-                foreach (var word in wordsLine)
+                foreach (var word in wordsLine.Item2)
                 {
                     string offset = "\t";
                     if (word.Length < 8) offset += "\t";
@@ -118,14 +125,96 @@ namespace CourseWorkSP
                         description = "Шістнадцяткова константа";
                     else if (Regex.IsMatch(word, "[0-1]+b"))
                         description = "Двійкова константа";
-                    result += i + "\t\t" + word + offset + word.Length + "\t\t\t\t\t" + description + "\n";
+                    result.Add((i+1) + "\t\t" + word + offset + word.Length + "\t\t\t\t\t" + description + "\n");
                     i++;
                 }
                 
-                result += "\n";
+                result.Add("____________________________________________________________________________________________________________________\n\n");
             }
 
             return result;
+        }
+
+        public List<string> CreateSentenceStructureTable()
+        {
+            List<string> result = new List<string>()
+            {
+                "Таблиця структури речень\n",
+                "Поле міток(імені)\t\tПоле мнемокоду\t\t\t\t\t\t\t1-й операнд\t\t\t\t\t\t\t2-й операнд\n",
+                "№ лексеми поля\t\t\t№ першої лексеми поля\t\tКіл-ть лексем поля\t\t№ першої лексеми операнда\tКіл-ть лексем операнда\t\t№ першої лексеми операнда\tКіл-ть лексем операнда\n"
+            };
+            
+            foreach (var wordsLine in _words)
+            {
+                int i = 0;
+                int lekMC = -1;
+                int lekMCCount = 0;
+                int lekOp1 = -1;
+                int lekOp1Count = 0;
+                int lekOp2 = -1;
+                int lekOp2Count = 0;
+                bool isFirst = true;
+                bool isException = false;
+
+                foreach (var word in wordsLine.Item2)
+                {
+                    if (_directives.Contains(word.ToLower()) || word == ":")
+                        isException = true;
+                    if (_instructions.Contains(word.ToLower()))
+                    {
+                        if (lekMC == -1)
+                            lekMC = i;
+                        lekMCCount++;
+                    }
+                    else if(word == ",")
+                    {
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        if (isFirst)
+                        {
+                            if (lekOp1 == -1)
+                                lekOp1 = i;
+                            lekOp1Count++;
+                        }
+                        else {
+                            if (lekOp2 == -1)
+                                lekOp2 = i;
+                            lekOp2Count++;
+                        }
+                    }
+                    i++;
+                }
+
+                if (!isException && lekMC == -1 && wordsLine.Item2.Count > 0)
+                {
+                    result.Add("Wrong instruction\n");
+                    return result;
+                }
+                else if(lekMC != -1)
+                {
+                    int row = -1;
+                    var buffer = FindElement(_words, wordsLine.Item2);
+                    if (buffer != null)
+                        row = buffer.Item1;
+                    result.Add(row + "\t\t\t\t" + (lekMC+1) + "\t\t\t\t" + lekMCCount + "\t\t\t\t" + (lekOp1+1) + "\t\t\t\t" + lekOp1Count
+                             + "\t\t\t\t" + (lekOp2+1) + "\t\t\t\t" + lekOp2Count + "\n");
+                }
+            }
+
+            return result;
+        }
+
+        public static Tuple<int, List<string>> FindElement(List<Tuple<int, List<string>>> list, List<string> value)
+        {
+            foreach (var item in list)
+            {
+                if (item.Item2 == value)
+                    return item;
+            }
+
+            return null;
         }
     }
 }
