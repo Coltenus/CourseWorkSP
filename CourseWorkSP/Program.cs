@@ -11,7 +11,7 @@ namespace CourseWorkSP
     {
         public static void Main(string[] args)
         {
-            RowsData rows;
+            RowsData rows = null;
             int in_param = FindParameterPosition("-i", args);
 
             if(CheckParametersValidity(in_param, args)
@@ -21,7 +21,8 @@ namespace CourseWorkSP
                 rows = new RowsData(lines);
             }
             
-            Console.WriteLine();
+            if(rows != null)
+                Console.WriteLine(rows.CreateSymbolTable());
         }
 
         private static int FindParameterPosition(string param, string[] args)
