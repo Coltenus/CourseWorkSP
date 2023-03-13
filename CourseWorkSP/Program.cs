@@ -12,19 +12,29 @@ namespace CourseWorkSP
         public static void Main(string[] args)
         {
             RowsData rows = null;
-            int in_param = FindParameterPosition("-i", args);
+            int in_param = -1;
+            if(args.Length > 1)
+                in_param = FindParameterPosition("-i", args);
 
-            if(CheckParametersValidity(in_param, args)
-               && File.Exists(args[in_param+1])){
-                var lines = File.ReadLines(args[in_param+1], Encoding.Default).ToList();
-                
-                rows = new RowsData(lines);
-            }
-
-            if (rows != null)
+            List<string> lines = null;
+            try
             {
-                WriteListInFile(args[in_param + 1], rows.CreateSymbolTable(), FileMode.Create);
-                WriteListInFile(args[in_param + 1], rows.CreateSentenceStructureTable(), FileMode.Append);
+                if (in_param > 0 && CheckParametersValidity(in_param, args)
+                                 && File.Exists(args[in_param + 1]))
+                {
+                    lines = File.ReadLines(args[in_param + 1], Encoding.Default).ToList();
+                }
+                else lines = File.ReadLines("test1.asm", Encoding.Default).ToList();
+
+                rows = new RowsData(lines);
+
+                WriteListInFile("result.txt", rows.CreateSymbolTable(), FileMode.Create);
+                WriteListInFile("result.txt", rows.CreateSentenceStructureTable(), FileMode.Append);
+                Console.WriteLine("Файл з даними було створено(result.txt).");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
@@ -52,7 +62,7 @@ namespace CourseWorkSP
 
         private static void WriteListInFile(string path, List<string> lines, FileMode mode)
         {
-            var output = File.Open(path.Replace(".asm", "_output.txt"), mode);
+            var output = File.Open(path, mode);
             foreach (var line in lines)
             {
                 var bytes = Encoding.UTF8.GetBytes(line);
