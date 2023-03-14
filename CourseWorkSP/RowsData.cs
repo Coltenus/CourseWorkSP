@@ -11,7 +11,11 @@ namespace CourseWorkSP
     {
         private List<string> _directives = new List<string>()
         {
-            ".model", ".data", ".code", "end", "db", "dw", "dd"
+            ".model", ".data", ".code", "end"
+        };
+        private List<string> _varTypes = new List<string>()
+        {
+            "db", "dw", "dd"
         };
         private List<string> _instructions = new List<string>()
         {
@@ -35,6 +39,7 @@ namespace CourseWorkSP
         };
         public List<string> _rows { get; set; }
         public List<Tuple<int, List<string>>> _words { get; set; }
+        public Dictionary<string, int> _labels { get; set; }
         public bool isExist { get; }
 
         public RowsData()
@@ -45,6 +50,7 @@ namespace CourseWorkSP
         {
             _rows = rows;
             _words = new List<Tuple<int, List<string>>>();
+            _labels = new Dictionary<string, int>();
             isExist = true;
             int i = 0;
             int rowOffset = 0;
@@ -82,68 +88,64 @@ namespace CourseWorkSP
             }
         }
 
-        public List<string> CreateSymbolTable()
+        public Dictionary<int, string> CreateSymbolTable()
         {
-            List<string> result = new List<string>()
-            {
-                "Таблиця лексем\n"
-            };
+            Dictionary<int, string> result = new Dictionary<int, string>();
             foreach (var wordsLine in _words)
             {
                 int i = 0;
-                result.Add("№\t\tЛексема\t\tДовжина лексеми у символах\t\tТип лексеми\n");
-
+                result.Add(wordsLine.Item1, "");
                 foreach (var word in wordsLine.Item2)
                 {
                     string offset = "\t";
-                    if (word.Length < 8) offset += "\t";
-                    string description = "Ідентифікатор користувача або не визначений";
-                    if (word.Length == 1) description = "односимвольна";
+                    string wLen = word.Length.ToString();
+                    if (word.Length+wLen.Length+3 < 8) offset += "\t";
+                    string description = "user identifier or undefined";
+                    if (word.Length == 1 && !int.TryParse(word, out _)) description = "symbol";
                     else if (_directives.Contains(word))
-                        description = "Ідентифікатор директиви";
+                        description = "directive";
+                    else if (_varTypes.Contains(word))
+                        description = "variable type";
                     else if (_instructions.Contains(word.ToLower()))
-                        description = "Ідентифікатор мнемокоду машиної інструкції";
+                        description = "mnemocode";
                     else if (_bit32.Contains(word.ToLower()))
-                        description = "Ідентифікатор 32-розрядного регестра даних";
+                        description = "register 32";
                     else if (_bit16.Contains(word.ToLower()))
-                        description = "Ідентифікатор 16-розрядного регестра даних";
+                        description = "register 16";
                     else if (_bit8.Contains(word.ToLower()))
-                        description = "Ідентифікатор 8-розрядного регестра даних";
+                        description = "register 8";
                     else if (_modelType.Contains(word.ToLower()))
-                        description = "Модель пам'яті";
+                        description = "model type";
                     else if (word.ToUpper() == "BYTE")
-                        description = "Ідентифікатор тип 1";
+                        description = "size directive 1";
                     else if (word.ToUpper() == "WORD")
-                        description = "Ідентифікатор тип 2";
+                        description = "size directive 2";
                     else if (word.ToUpper() == "DWORD")
-                        description = "Ідентифікатор тип 4";
+                        description = "size directive 4";
                     else if (word.ToUpper() == "PTR")
-                        description = "Ідентифікатор оператора визначення типу";
-                    else if (int.TryParse(word, out _))
-                        description = "Десяткова константа";
+                        description = "pointer directive";
+                    else if (int.TryParse(word, out _) || Regex.IsMatch(word, @"[0-f]+d"))
+                        description = "decimal constant";
                     else if (Regex.IsMatch(word, @"[0-f]+h"))
-                        description = "Шістнадцяткова константа";
+                        description = "hex constant";
                     else if (Regex.IsMatch(word, "[0-1]+b"))
-                        description = "Двійкова константа";
-                    result.Add((i+1) + "\t\t" + word + offset + word.Length + "\t\t\t\t\t" + description + "\n");
+                        description = "binary constant";
+                    else if(!_labels.ContainsKey(word) && i+1 < wordsLine.Item2.Count && (wordsLine.Item2[i+1] == ":"
+                                || _varTypes.Contains(wordsLine.Item2[i + 1])))
+                        _labels.Add(word, wordsLine.Item1+1);
+                    result[wordsLine.Item1] += "\t" + (i+1) + ")\t" + word + " (" + word.Length + ")" + offset + description + "\n";
                     i++;
                 }
-                
-                result.Add("____________________________________________________________________________________________________________________\n\n");
             }
 
             return result;
         }
 
-        public List<string> CreateSentenceStructureTable()
+        public Dictionary<int, string> CreateSentenceStructureTable()
         {
-            List<string> result = new List<string>()
-            {
-                "Таблиця структури речень\n",
-                "Поле міток(імені)\t\tПоле мнемокоду\t\t\t\t\t\t\t1-й операнд\t\t\t\t\t\t\t2-й операнд\n",
-                "№ лексеми поля\t\t\t№ першої лексеми поля\t\tКіл-ть лексем поля\t\t№ першої лексеми операнда\tКіл-ть лексем операнда\t\t№ першої лексеми операнда\tКіл-ть лексем операнда\n"
-            };
-            
+            Dictionary<int, string> result = new Dictionary<int, string>();
+                
+
             foreach (var wordsLine in _words)
             {
                 int i = 0;
@@ -155,10 +157,13 @@ namespace CourseWorkSP
                 int lekOp2Count = 0;
                 bool isFirst = true;
                 bool isException = false;
+                string labels = "";
+                
+                result.Add(wordsLine.Item1, "Sentence struct:\n");
 
                 foreach (var word in wordsLine.Item2)
                 {
-                    if (_directives.Contains(word.ToLower()) || word == ":")
+                    if (_directives.Contains(word.ToLower()) || _varTypes.Contains(word.ToLower()) || word == ":")
                         isException = true;
                     if (_instructions.Contains(word.ToLower()))
                     {
@@ -184,22 +189,27 @@ namespace CourseWorkSP
                             lekOp2Count++;
                         }
                     }
+
+                    if (_labels.ContainsKey(word))
+                    {
+                        labels += _labels[word] + ", ";
+                    }
                     i++;
                 }
 
                 if (!isException && lekMC == -1 && wordsLine.Item2.Count > 0)
                 {
-                    result.Add("Wrong instruction\n");
+                    result[wordsLine.Item1] += "wrong instruction\n";
                     return result;
                 }
-                else if(lekMC != -1)
                 {
                     int row = -1;
                     var buffer = FindElement(_words, wordsLine.Item2);
                     if (buffer != null)
                         row = buffer.Item1;
-                    result.Add(row + "\t\t\t\t" + (lekMC+1) + "\t\t\t\t" + lekMCCount + "\t\t\t\t" + (lekOp1+1) + "\t\t\t\t" + lekOp1Count
-                             + "\t\t\t\t" + (lekOp2+1) + "\t\t\t\t" + lekOp2Count + "\n");
+                    result[wordsLine.Item1] += "labels: " + labels + "\t| mnem(first, count): " + (lekMC+1) + ", " + lekMCCount
+                    + "\t| operand 1(first, count): " + (lekOp1+1) + ", " + lekOp1Count + "\t| operand 2(first, count): " + (lekOp2+1)
+                    + ", " + lekOp2Count + "\n";
                 }
             }
 
