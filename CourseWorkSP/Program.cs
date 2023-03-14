@@ -30,7 +30,7 @@ namespace CourseWorkSP
 
                 WriteListInFile("result.txt", rows._words, rows.CreateSymbolTable(),
                     rows.CreateSentenceStructureTable(), FileMode.Create);
-                Console.WriteLine("Файл з даними було створено(result.txt).");
+                Console.WriteLine("File with data was created(result.txt).");
             }
             catch (Exception ex)
             {
