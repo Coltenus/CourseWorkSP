@@ -29,7 +29,7 @@ namespace CourseWorkSP
                 rows = new RowsData(lines);
 
                 WriteListInFile("result.txt", rows._words, rows.CreateSymbolTable(),
-                    rows.CreateSentenceStructureTable(), FileMode.Create);
+                    rows.CreateSentenceStructureTable(), rows._rows, FileMode.Create);
                 Console.WriteLine("File with data was created(result.txt).");
             }
             catch (Exception ex)
@@ -61,17 +61,12 @@ namespace CourseWorkSP
         }
 
         private static void WriteListInFile(string path, List<Tuple<int, List<string>>> lines,
-            Dictionary<int, string> data1, Dictionary<int, string> data2, FileMode mode)
+            Dictionary<int, string> data1, Dictionary<int, string> data2, List<string> rows, FileMode mode)
         {
             var output = File.Open(path, mode);
             foreach (var line in lines)
             {
-                string buffer = "№" + line.Item1 + " | \"";
-                foreach (var word in line.Item2)
-                {
-                    buffer += word + " ";
-                }
-                buffer += "\"\n" + data1[line.Item1] + data2[line.Item1] + "\n\n\n";
+                string buffer = "№" + line.Item1 + " | \"" + rows[line.Item1-1].Trim(new char[]{' ', '\t'}) + "\"\n" + data1[line.Item1] + data2[line.Item1] + "\n\n\n";
                 var bytes = Encoding.UTF8.GetBytes(buffer);
                 output.Write(bytes, 0, bytes.Length);
             }

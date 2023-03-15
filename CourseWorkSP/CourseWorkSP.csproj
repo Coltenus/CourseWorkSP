@@ -44,6 +44,7 @@
         <Compile Include="RowsData.cs" />
     </ItemGroup>
     <ItemGroup>
+      <Content Include="result.txt" />
       <Content Include="test1.asm" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

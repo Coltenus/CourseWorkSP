@@ -132,7 +132,7 @@ namespace CourseWorkSP
                         description = "binary constant";
                     else if(!_labels.ContainsKey(word) && i+1 < wordsLine.Item2.Count && (wordsLine.Item2[i+1] == ":"
                                 || _varTypes.Contains(wordsLine.Item2[i + 1])))
-                        _labels.Add(word, wordsLine.Item1+1);
+                        _labels.Add(word, wordsLine.Item1);
                     result[wordsLine.Item1] += "\t" + (i+1) + ")\t" + word + " (" + word.Length + ")" + offset + description + "\n";
                     i++;
                 }
@@ -165,7 +165,7 @@ namespace CourseWorkSP
                 {
                     if (_directives.Contains(word.ToLower()) || _varTypes.Contains(word.ToLower()) || word == ":")
                         isException = true;
-                    if (_instructions.Contains(word.ToLower()))
+                    if (_instructions.Contains(word.ToLower()) || _varTypes.Contains(word.ToLower()) || _directives.Contains(word.ToLower()))
                     {
                         if (lekMC == -1)
                             lekMC = i;
