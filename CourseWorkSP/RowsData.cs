@@ -157,12 +157,15 @@ namespace CourseWorkSP
                 int lekOp2Count = 0;
                 bool isFirst = true;
                 bool isException = false;
-                string labels = "";
+                int labelPos = -1;
+                int labelsCount = 0;
+                bool doneCheck;
                 
-                result.Add(wordsLine.Item1, "Sentence struct:\n");
+                result.Add(wordsLine.Item1, "Sentence struct(first, count):\n");
 
                 foreach (var word in wordsLine.Item2)
                 {
+                    doneCheck = false;
                     if (_directives.Contains(word.ToLower()) || _varTypes.Contains(word.ToLower()) || word == ":")
                         isException = true;
                     if (_instructions.Contains(word.ToLower()) || _varTypes.Contains(word.ToLower()) || _directives.Contains(word.ToLower()))
@@ -170,13 +173,24 @@ namespace CourseWorkSP
                         if (lekMC == -1)
                             lekMC = i;
                         lekMCCount++;
+                        doneCheck = true;
+                    }
+                    else if (_labels.ContainsKey(word))
+                    {
+                        if (labelPos == -1)
+                        {
+                            labelPos = i;
+                        }
+                        labelsCount++;
+                        doneCheck = true;
                     }
                     else if(word == ",")
                     {
                         isFirst = false;
+                        doneCheck = true;
                     }
-                    else
-                    {
+                    
+                    if(!doneCheck && lekMC != -1 && lekMC < i || i == labelPos && lekMC != -1 && lekMC < labelPos){
                         if (isFirst)
                         {
                             if (lekOp1 == -1)
@@ -189,11 +203,7 @@ namespace CourseWorkSP
                             lekOp2Count++;
                         }
                     }
-
-                    if (_labels.ContainsKey(word))
-                    {
-                        labels += _labels[word] + ", ";
-                    }
+                    
                     i++;
                 }
 
@@ -207,9 +217,19 @@ namespace CourseWorkSP
                     var buffer = FindElement(_words, wordsLine.Item2);
                     if (buffer != null)
                         row = buffer.Item1;
-                    result[wordsLine.Item1] += "labels: " + labels + "\t| mnem(first, count): " + (lekMC+1) + ", " + lekMCCount
-                    + "\t| operand 1(first, count): " + (lekOp1+1) + ", " + lekOp1Count + "\t| operand 2(first, count): " + (lekOp2+1)
-                    + ", " + lekOp2Count + "\n";
+                    string mnem = "";
+                    if (lekMCCount > 0)
+                        mnem = "mnem: " + (lekMC+1) + ", " + lekMCCount + "\t| ";
+                    string op1 = "";
+                    if (lekOp1Count > 0)
+                        op1 = "operand 1: " + (lekOp1+1) + ", " + lekOp1Count + "\t| ";
+                    string op2 = "";
+                    if (lekOp2Count > 0)
+                        op2 = "operand 2: " + (lekOp2+1) + ", " + lekOp2Count + "\t| ";
+                    string labels = "";
+                    if (labelsCount > 0)
+                        labels = "label: " + (labelPos+1) + "," + labelsCount + "\t| ";
+                    result[wordsLine.Item1] += labels + mnem + op1 + op2 + "\n";
                 }
             }
 
